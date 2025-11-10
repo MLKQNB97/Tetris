@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Hover Effect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: #0a0a0a;
+            overflow-x: hidden;
+            font-family: 'Futura', 'Century Gothic', 'Trebuchet MS', sans-serif;
+            position: relative;
+        }
+
+        .header-text {
+            position: fixed;
+            top: 40px;
+            color: white;
+            font-family: 'EB Garamond', Garamond, serif;
+            font-size: 1.2rem;
+            font-weight: 400;
+            letter-spacing: 0.1rem;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .header-text-left {
+            left: 40px;
+        }
+
+        .header-text-right {
+            right: 40px;
+        }
+
+        .section {
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas {
+            display: block;
+            cursor: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            pointer-events: none;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .hero-section {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content {
+            text-align: center;
+            color: white;
+            z-index: 10;
+            pointer-events: none;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-family: 'Futura', 'Century Gothic', 'Trebuchet MS', sans-serif;
+            font-size: 5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.3rem;
+        }
+
+        p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            line-height: 1.6;
+            margin: 0 auto;
+        }
+
+        .video-section {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            margin: 0;
+            background: #0a0a0a;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 16 / 9;
+            position: relative;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #0a0a0a;
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            margin: 0;
+            padding: 0;
+            display: block;
+            pointer-events: auto;
+            background: #0a0a0a;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        /* Ensure smooth mouse tracking over video */
+        .video-container {
+            cursor: none;
+        }
+        
+        /* Transparent overlay for mouse tracking over iframe */
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            pointer-events: auto;
+            cursor: none;
+            background: transparent;
+        }
+        
+        /* Remove Google Drive iframe default styling */
+        .video-container iframe[src*="drive.google.com"] {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            -webkit-mask-image: none !important;
+            mask-image: none !important;
+        }
+
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        @media (max-width: 768px) {
+            .header-text {
+                font-size: 0.9rem;
+                top: 20px;
+            }
+
+            .header-text-left {
+                left: 20px;
+            }
+
+            .header-text-right {
+                right: 20px;
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-text header-text-left">Aesthetic Pattern Scanner</div>
+    <div class="header-text header-text-right">Visual Insights Archive</div>
+    
+    <canvas id="canvas"></canvas>
+    <div class="cursor"></div>
+    
+    <div class="hero-section">
+        <div class="content">
+            <h1>Aesthetic</h1>
+            <p>An interactive analysis of how visual trends in advertising and design shape consumer appeal, based on data from 176 participants.</p>
+        </div>
+    </div>
+
+    <div class="video-section">
+        <div class="video-container">
+            <iframe src="https://drive.google.com/file/d/1XTcwpnCZ6Ojp-oGBeqq48DV9oQ25xoeP/preview?usp=sharing" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <div class="video-overlay"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.querySelector('.cursor');
+        const body = document.body;
+        const html = document.documentElement;
+
+        // Set canvas to viewport size (fixed canvas)
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        // Initial resize
+        resizeCanvas();
+
+        // Tetris piece shapes
+        const tetrisShapes = [
+            [[1,1,1,1]], // I
+            [[1,1],[1,1]], // O
+            [[0,1,0],[1,1,1]], // T
+            [[1,0,0],[1,1,1]], // L
+            [[0,0,1],[1,1,1]], // J
+            [[0,1,1],[1,1,0]], // S
+            [[1,1,0],[0,1,1]]  // Z
+        ];
+
+        const colors = [
+            '#FF006E', '#8338EC', '#3A86FF', '#FB5607', 
+            '#FFBE0B', '#06FFA5', '#FF1B8D', '#00F5FF'
+        ];
+
+        class TetrisPiece {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.shape = tetrisShapes[Math.floor(Math.random() * tetrisShapes.length)];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.size = 30;
+                this.opacity = 0;
+                this.targetOpacity = 0;
+                this.rotation = Math.random() * 360;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.globalAlpha = this.opacity;
+
+                this.shape.forEach((row, i) => {
+                    row.forEach((cell, j) => {
+                        if (cell) {
+                            ctx.fillStyle = this.color;
+                            ctx.fillRect(
+                                j * this.size - (row.length * this.size) / 2,
+                                i * this.size - (this.shape.length * this.size) / 2,
+                                this.size - 2,
+                                this.size - 2
+                            );
+                        }
+                    });
+                });
+
+                ctx.restore();
+            }
+
+            update(mouseX, mouseY, scrollY) {
+                // Convert absolute document Y position to viewport-relative position
+                const viewportY = this.y - scrollY;
+                
+                // Only update if piece is in or near viewport (for performance)
+                if (viewportY > -300 && viewportY < window.innerHeight + 300) {
+                    const dx = this.x - mouseX;
+                    const dy = viewportY - mouseY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    // Increased reveal radius for smoother, more forgiving effect
+                    const revealRadius = 200;
+
+                    if (distance < revealRadius) {
+                        // Smoother falloff curve
+                        const normalizedDist = distance / revealRadius;
+                        this.targetOpacity = Math.max(0, Math.pow(1 - normalizedDist, 1.5));
+                    } else {
+                        this.targetOpacity = 0;
+                    }
+                } else {
+                    this.targetOpacity = 0;
+                }
+
+                // Faster, smoother interpolation for more responsive animation
+                this.opacity += (this.targetOpacity - this.opacity) * 0.2;
+            }
+        }
+
+        const pieces = [];
+        
+        function getDocumentHeight() {
+            return Math.max(
+                body.scrollHeight, 
+                body.offsetHeight, 
+                html.clientHeight, 
+                html.scrollHeight, 
+                html.offsetHeight,
+                window.innerHeight * 2 // At least 2 viewports for hero + video
+            );
+        }
+        
+        function initPieces() {
+            pieces.length = 0;
+            const cols = Math.ceil(canvas.width / 60);
+            // Create pieces for the entire document height, not just viewport
+            const documentHeight = getDocumentHeight();
+            const totalRows = Math.ceil(documentHeight / 60);
+
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < totalRows; j++) {
+                    pieces.push(new TetrisPiece(
+                        i * 60 + 30 + Math.random() * 20,
+                        j * 60 + 30 + Math.random() * 20
+                    ));
+                }
+            }
+        }
+        
+        // Initialize pieces after a short delay to ensure content is loaded
+        setTimeout(() => {
+            initPieces();
+        }, 100);
+        
+        // Update pieces when document height changes
+        function updateDocumentHeight() {
+            initPieces();
+        }
+        
+        const observer = new ResizeObserver(() => {
+            updateDocumentHeight();
+        });
+        observer.observe(body);
+        
+        // Also update on load
+        window.addEventListener('load', () => {
+            initPieces();
+        });
+
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+
+        // Track mouse movement globally
+        function updateMousePosition(e) {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+        }
+
+        // Track mouse on document (works everywhere except inside iframes)
+        document.addEventListener('mousemove', updateMousePosition);
+        
+        // Enhanced mouse tracking over video area
+        const videoContainer = document.querySelector('.video-container');
+        const videoOverlay = document.querySelector('.video-overlay');
+        
+        if (videoContainer) {
+            // Track mouse on container edges and areas around iframe
+            videoContainer.addEventListener('mousemove', updateMousePosition);
+            videoContainer.addEventListener('mouseenter', updateMousePosition);
+        }
+        
+        // Track on video section for comprehensive coverage
+        const videoSection = document.querySelector('.video-section');
+        if (videoSection) {
+            videoSection.addEventListener('mousemove', updateMousePosition);
+        }
+        
+        // Try to track mouse over iframe using overlay with smart pointer-events
+        if (videoOverlay && videoContainer) {
+            // Use a technique: overlay tracks mouse but allows clicks through via temporary disable
+            let overlayActive = true;
+            
+            // Activate overlay for mouse tracking
+            const activateOverlay = () => {
+                overlayActive = true;
+                videoOverlay.style.pointerEvents = 'auto';
+            };
+            
+            // Deactivate overlay to allow clicks
+            const deactivateOverlay = () => {
+                overlayActive = false;
+                videoOverlay.style.pointerEvents = 'none';
+            };
+            
+            // Start with overlay active
+            activateOverlay();
+            
+            // Track mouse on overlay
+            videoOverlay.addEventListener('mousemove', (e) => {
+                updateMousePosition(e);
+            });
+            
+            // On click, briefly disable overlay to allow iframe interaction
+            videoOverlay.addEventListener('mousedown', () => {
+                deactivateOverlay();
+                // Re-enable after click completes
+                setTimeout(activateOverlay, 150);
+            });
+            
+            // Also re-enable on mouseup anywhere
+            document.addEventListener('mouseup', () => {
+                setTimeout(activateOverlay, 100);
+            });
+        }
+
+        function animate() {
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Translate canvas to account for scroll
+            ctx.save();
+            ctx.translate(0, -scrollY);
+
+            // Update and draw pieces that are in or near viewport
+            pieces.forEach(piece => {
+                piece.update(mouseX, mouseY, scrollY);
+                // Draw piece if it has any opacity
+                const viewportY = piece.y - scrollY;
+                // Draw pieces in a wider range for smooth transitions, especially over video
+                if (viewportY > -200 && viewportY < window.innerHeight + 200) {
+                    if (piece.opacity > 0.01) {
+                        piece.draw();
+                    }
+                }
+            });
+            
+            ctx.restore();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            updateDocumentHeight();
+        });
+    </script>
+</body>
+</html>
